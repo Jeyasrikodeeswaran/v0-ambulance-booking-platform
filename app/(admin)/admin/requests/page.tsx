@@ -48,22 +48,40 @@ export default function AdminRequestsPage() {
         setState((prev) => ({ ...prev, isLoading: true }));
 
         // Fetch providers
-        const providersRes = await fetch('/api/admin/requests/providers');
-        const providers = await providersRes.json();
+        let providers: any[] = [];
+        try {
+          const providersRes = await fetch('/api/admin/requests/providers');
+          const providersData = providersRes.ok ? await providersRes.json() : [];
+          providers = Array.isArray(providersData) ? providersData : [];
+          console.log('[v0] Providers data:', providers);
+        } catch (err) {
+          console.error('[v0] Error fetching providers:', err);
+          providers = [];
+        }
 
         // Fetch stats
-        const statsRes = await fetch('/api/admin/stats');
-        const stats = await statsRes.json();
+        let stats = { total: 0, pending: 0, accepted: 0, rejected: 0 };
+        try {
+          const statsRes = await fetch('/api/admin/stats');
+          stats = statsRes.ok ? await statsRes.json() : stats;
+        } catch (err) {
+          console.error('[v0] Error fetching stats:', err);
+        }
 
         // Fetch initial requests
-        const requestsRes = await fetch('/api/admin/requests?page=1&pageSize=10');
-        const requestsData = await requestsRes.json();
+        let requestsData = { requests: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
+        try {
+          const requestsRes = await fetch('/api/admin/requests?page=1&pageSize=10');
+          requestsData = requestsRes.ok ? await requestsRes.json() : requestsData;
+        } catch (err) {
+          console.error('[v0] Error fetching requests:', err);
+        }
 
         setState((prev) => ({
           ...prev,
-          providers: providers || [],
+          providers: Array.isArray(providers) ? providers : [],
           stats,
-          requests: requestsData.requests || [],
+          requests: Array.isArray(requestsData.requests) ? requestsData.requests : [],
           total: requestsData.total || 0,
           page: requestsData.page || 1,
           pageSize: requestsData.pageSize || 10,
@@ -238,7 +256,7 @@ export default function AdminRequestsPage() {
 
       {/* Filters */}
       <RequestFilters
-        providers={state.providers}
+        providers={Array.isArray(state.providers) ? state.providers : []}
         onFiltersChange={handleFiltersChange}
       />
 

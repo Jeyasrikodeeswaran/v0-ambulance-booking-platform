@@ -52,9 +52,9 @@ export async function fetchBookingRequests(
     .select(
       `
       *,
-      user:users(*),
-      provider:ambulance_providers(*),
-      ambulance:ambulances(*)
+      user:user_id(full_name, email, phone),
+      provider:provider_id(id, company_name, phone),
+      ambulance:ambulance_id(id, vehicle_number, type, driver_name, driver_phone)
     `,
       { count: 'exact' }
     );
@@ -107,9 +107,9 @@ export async function fetchBookingRequestById(id: string) {
     .select(
       `
       *,
-      user:users(*),
-      provider:ambulance_providers(*),
-      ambulance:ambulances(*)
+      user:user_id(full_name, email, phone),
+      provider:provider_id(id, company_name, phone),
+      ambulance:ambulance_id(id, vehicle_number, type, driver_name, driver_phone)
     `
     )
     .eq('id', id)
@@ -240,10 +240,10 @@ export async function fetchAuditLogs(booking_id: string) {
 // Get all providers for filtering
 export async function fetchProviders() {
   const { data, error } = await supabase
-    .from('ambulance_providers')
-    .select('id, name')
-    .order('name');
+    .from('providers')
+    .select('id, company_name')
+    .order('company_name');
 
   if (error) throw error;
-  return data;
+  return data?.map(p => ({ id: p.id, name: p.company_name })) || [];
 }
