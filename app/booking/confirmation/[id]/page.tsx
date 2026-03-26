@@ -5,179 +5,152 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { BookingStatusBadge } from '@/components/booking/booking-status-badge'
-import { AmbulanceTypeBadge } from '@/components/ambulance/ambulance-type-badge'
-import { bookingStore, ambulanceStore, providerStore } from '@/lib/data/store'
-import { formatPrice } from '@/lib/utils/pricing'
-import type { Booking, Ambulance, Provider } from '@/lib/data/types'
-import {
-  CheckCircle,
-  Calendar,
-  Clock,
-  MapPin,
-  Phone,
-  User,
-  ArrowRight,
-  Home,
-} from 'lucide-react'
-import { format } from 'date-fns'
+import { BookingConfirmationCard } from '@/components/booking/booking-confirmation-card'
+import { Loader2, Home } from 'lucide-react'
+import type { Booking } from '@/lib/data/types'
 
 export default function BookingConfirmationPage() {
   const params = useParams()
+  const bookingId = params.id as string
   const [booking, setBooking] = useState<Booking | null>(null)
-  const [ambulance, setAmbulance] = useState<Ambulance | null>(null)
-  const [provider, setProvider] = useState<Provider | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [autoRefresh, setAutoRefresh] = useState(true)
 
+  // Poll for updates every 5 seconds
   useEffect(() => {
-    const bookingId = params.id as string
-    const bookingData = bookingStore.getById(bookingId)
+    if (!bookingId || !autoRefresh) return
 
-    if (bookingData) {
-      setBooking(bookingData)
-      setAmbulance(ambulanceStore.getById(bookingData.ambulanceId) || null)
-      setProvider(providerStore.getById(bookingData.providerId) || null)
+    const fetchBooking = async () => {
+      try {
+        const response = await fetch(`/api/bookings?id=${bookingId}`)
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError('Booking not found')
+          } else {
+            throw new Error('Failed to fetch booking')
+          }
+          return
+        }
+        
+        const data = await response.json()
+        setBooking(data)
+        
+        // Stop polling once accepted or rejected
+        if (data.status !== 'pending') {
+          setAutoRefresh(false)
+        }
+      } catch (err) {
+        console.error('Error fetching booking:', err)
+        // Fallback to local store if API fails
+        const { bookingStore } = await import('@/lib/data/store')
+        const bookingData = bookingStore.getById(bookingId)
+        if (bookingData) {
+          setBooking(bookingData)
+        }
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }, [params.id])
 
-  if (!booking) {
+    // Initial fetch
+    fetchBooking()
+
+    // Poll every 5 seconds while pending
+    const interval = setInterval(fetchBooking, 5000)
+
+    return () => clearInterval(interval)
+  }, [bookingId, autoRefresh])
+
+  if (error) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h2 className="text-2xl font-bold text-foreground">Booking Not Found</h2>
-        <Button asChild className="mt-4">
-          <Link href="/">Back to Home</Link>
-        </Button>
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <h1 className="text-3xl font-bold text-foreground">Booking Error</h1>
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-red-600 mb-4">{error}</p>
+              <Button asChild>
+                <Link href="/dashboard/bookings">View My Bookings</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading || !booking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading booking details...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mx-auto max-w-2xl">
-        {/* Success Header */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-            <CheckCircle className="h-8 w-8 text-emerald-600" />
-          </div>
-          <h1 className="text-3xl font-bold text-foreground">Booking Submitted!</h1>
-          <p className="mt-2 text-muted-foreground">
-            Your booking request has been sent to the provider. You will be notified once it&apos;s confirmed.
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Booking Request Submitted</h1>
+          <p className="text-muted-foreground mt-2">
+            {booking.status === 'pending' 
+              ? 'Your request is being reviewed. This page updates automatically every 5 seconds.'
+              : booking.status === 'accepted'
+              ? 'Your ambulance has been confirmed! Check your booking details below.'
+              : 'Unfortunately, your request could not be fulfilled. Please contact support.'}
           </p>
         </div>
 
-        {/* Booking Summary Card */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Booking ID</p>
-                <p className="font-mono text-foreground">{booking.id}</p>
-              </div>
-              <BookingStatusBadge status={booking.status} />
-            </div>
-
-            <div className="space-y-4">
-              {/* Provider & Ambulance */}
-              <div className="flex items-start justify-between rounded-lg bg-muted/50 p-4">
-                <div>
-                  <p className="font-medium text-foreground">{provider?.companyName}</p>
-                  <p className="text-sm text-muted-foreground">{ambulance?.vehicleNumber}</p>
-                </div>
-                {ambulance && <AmbulanceTypeBadge type={ambulance.type} />}
-              </div>
-
-              {/* Trip Details */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <p className="mb-1 text-xs font-medium uppercase text-muted-foreground">Pickup</p>
-                  <div className="flex items-start gap-2">
-                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                    <p className="text-sm text-foreground">{booking.pickupLocation.address}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="mb-1 text-xs font-medium uppercase text-muted-foreground">Drop</p>
-                  <div className="flex items-start gap-2">
-                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
-                    <p className="text-sm text-foreground">{booking.dropLocation.address}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Date & Time */}
-              <div className="flex flex-wrap gap-6">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-foreground">
-                    {format(new Date(booking.date), 'EEEE, MMMM d, yyyy')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-foreground">{booking.time}</span>
-                </div>
-              </div>
-
-              {/* Patient Info */}
-              <div className="border-t border-border pt-4">
-                <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">Patient</p>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-foreground">{booking.patientName}</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground">{booking.patientAge} years</span>
-                </div>
-              </div>
-
-              {/* Driver Contact */}
-              {ambulance && (
-                <div className="border-t border-border pt-4">
-                  <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">Driver Contact</p>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-foreground">{ambulance.driverName}</span>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Phone className="h-3.5 w-3.5" />
-                      {ambulance.driverPhone}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Cost */}
-              <div className="flex items-center justify-between rounded-lg bg-primary/5 p-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Estimated Cost</p>
-                  <p className="text-sm text-muted-foreground">{booking.distance} km trip</p>
-                </div>
-                <p className="text-2xl font-bold text-primary">
-                  {formatPrice(booking.estimatedCost)}
+        {/* Auto-refresh indicator */}
+        {booking.status === 'pending' && (
+          <Card className="border-blue-200 bg-blue-50/50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+                <p className="text-sm text-blue-700">
+                  <strong>Live Updates:</strong> Page refreshes automatically. Expected response: ~10 minutes
                 </p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Info Notice */}
-        <Card className="mb-6 border-amber-200 bg-amber-50">
-          <CardContent className="p-4">
-            <p className="text-sm text-amber-800">
-              <strong>What happens next?</strong> The ambulance provider will review your request and confirm the booking. You can track the status in your dashboard.
-            </p>
-          </CardContent>
-        </Card>
+        {/* Confirmation Card */}
+        <BookingConfirmationCard
+          booking={{
+            id: booking.id,
+            patientName: booking.patientName,
+            patientPhone: booking.patientPhone,
+            patientAge: booking.patientAge,
+            pickupLocation: booking.pickupLocation.address,
+            dropLocation: booking.dropLocation.address,
+            date: booking.date,
+            time: booking.time,
+            ambulanceType: booking.ambulanceType,
+            status: booking.status as 'pending' | 'accepted' | 'rejected',
+            estimatedCost: booking.estimatedCost,
+            createdAt: booking.createdAt,
+            // Mock driver details when accepted
+            driver: booking.status === 'accepted' ? {
+              name: 'Raj Kumar',
+              phone: '+91 98765 43210',
+              vehicleNumber: 'DL-01AB1234',
+              vehicleType: 'Oxygen Support Ambulance',
+            } : undefined,
+          }}
+        />
 
         {/* Action Buttons */}
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button asChild className="flex-1 gap-2">
-            <Link href="/dashboard/bookings">
-              View My Bookings
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-          <Button variant="outline" asChild className="flex-1 gap-2">
-            <Link href="/">
+        <div className="flex gap-3 justify-center">
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/bookings" className="gap-2">
               <Home className="h-4 w-4" />
-              Back to Home
+              View All Bookings
             </Link>
           </Button>
         </div>

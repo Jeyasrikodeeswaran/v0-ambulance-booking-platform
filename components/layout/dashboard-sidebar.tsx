@@ -41,6 +41,7 @@ interface NavItem {
 
 const userNav: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Book Ambulance', href: '/book-ambulance', icon: Plus },
   { label: 'My Bookings', href: '/dashboard/bookings', icon: Calendar },
   { label: 'Find Ambulance', href: '/search', icon: Ambulance },
 ]
