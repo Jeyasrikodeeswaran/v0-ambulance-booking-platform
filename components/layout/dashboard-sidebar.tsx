@@ -29,6 +29,8 @@ import {
   Building2,
   BarChart3,
   CheckCircle,
+  Inbox,
+  PieChart,
 } from 'lucide-react'
 
 interface NavItem {
@@ -55,6 +57,8 @@ const providerNav: NavItem[] = [
 
 const adminNav: NavItem[] = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  { label: 'Ambulance Requests', href: '/admin/requests', icon: Inbox },
+  { label: 'Analytics', href: '/admin/analytics', icon: PieChart },
   { label: 'Provider Approvals', href: '/admin/providers', icon: CheckCircle },
   { label: 'All Providers', href: '/admin/providers/list', icon: Building2 },
   { label: 'Users', href: '/admin/users', icon: Users },
