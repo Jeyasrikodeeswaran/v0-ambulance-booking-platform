@@ -48,6 +48,8 @@ const providerNav: NavItem[] = [
   { label: 'My Ambulances', href: '/provider/ambulances', icon: Ambulance },
   { label: 'Add Ambulance', href: '/provider/ambulances/new', icon: Plus },
   { label: 'Booking Requests', href: '/provider/bookings', icon: Calendar },
+  { label: 'Active Trips', href: '/provider/trips', icon: List },
+  { label: 'Earnings', href: '/provider/earnings', icon: BarChart3 },
   { label: 'Settings', href: '/provider/settings', icon: Settings },
 ]
 
