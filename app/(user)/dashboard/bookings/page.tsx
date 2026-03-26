@@ -204,6 +204,27 @@ export default function UserBookingsPage() {
                       </Button>
                     </div>
                   </div>
+
+                  {/* Driver Details when accepted */}
+                  {booking.status === 'accepted' && (
+                    <div className="flex flex-col border-t bg-green-50/50 p-5 md:w-56 md:border-l md:border-t-0">
+                      <p className="mb-4 text-xs font-semibold uppercase text-green-900">Driver Details</p>
+                      <div className="space-y-3 text-sm">
+                        <div>
+                          <p className="text-xs text-green-700">Driver Name</p>
+                          <p className="font-semibold text-foreground">Raj Kumar</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-green-700">Vehicle Number</p>
+                          <p className="font-mono font-semibold text-foreground">DL-01AB1234</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-green-700">Contact</p>
+                          <p className="font-semibold text-foreground">+91 98765 43210</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )

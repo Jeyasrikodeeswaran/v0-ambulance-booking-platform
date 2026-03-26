@@ -19,6 +19,7 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Inbox,
 } from 'lucide-react'
 
 export default function AdminDashboardPage() {
@@ -103,6 +104,17 @@ export default function AdminDashboardPage() {
     },
   ]
 
+  const priorityActions = [
+    {
+      title: 'Manage Requests',
+      description: 'Review and process ambulance booking requests',
+      href: '/admin/requests',
+      icon: Inbox,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+    },
+  ]
+
   return (
     <div className="space-y-8">
       {/* Stats Grid */}
@@ -121,6 +133,25 @@ export default function AdminDashboardPage() {
               <CardContent>
                 <div className="text-2xl font-bold">{stat.value}</div>
                 <p className="text-xs text-muted-foreground">{stat.description}</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+
+      {/* Priority Actions */}
+      <div className="grid gap-4 sm:grid-cols-1">
+        {priorityActions.map((action) => (
+          <Link key={action.title} href={action.href}>
+            <Card className="transition-all hover:shadow-md hover:border-primary/20">
+              <CardContent className="flex items-center justify-between p-6">
+                <div>
+                  <CardTitle className="text-lg">{action.title}</CardTitle>
+                  <CardDescription className="mt-1">{action.description}</CardDescription>
+                </div>
+                <div className={`rounded-lg p-3 ${action.bgColor}`}>
+                  <action.icon className={`h-6 w-6 ${action.color}`} />
+                </div>
               </CardContent>
             </Card>
           </Link>
