@@ -77,7 +77,17 @@ CREATE TABLE IF NOT EXISTS bookings (
   patient_name VARCHAR(255) NOT NULL,
   patient_age INT,
   patient_condition TEXT,
- );
+  need_oxygen BOOLEAN DEFAULT FALSE,
+  wheelchair_required BOOLEAN DEFAULT FALSE,
+  special_instructions TEXT,
+  distance DECIMAL(10, 2),
+  estimated_cost DECIMAL(10, 2),
+  actual_cost DECIMAL(10, 2),
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'completed', 'cancelled')),
+  rejection_reason VARCHAR(500),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE INDEX idx_bookings_user_id ON bookings(user_id);
 CREATE INDEX idx_bookings_provider_id ON bookings(provider_id);
