@@ -151,8 +151,27 @@ function BookingFormContent() {
         status: 'pending',
       })
 
+      // Sync with Supabase Server
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          date,
+          time,
+          pickupLocation: pickup || 'Chennai',
+          dropLocation: drop || 'Chennai',
+          distance,
+          estimatedCost,
+        }),
+      });
+
+      const serverBooking = await res.json();
+
       toast.success('Booking request submitted successfully!')
-      router.push(`/booking/confirmation/${newBooking.id}`)
+      router.push(`/booking/confirmation/${serverBooking.id || newBooking.id}`)
     } catch (error) {
       toast.error('Failed to submit booking. Please try again.')
     } finally {

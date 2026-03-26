@@ -77,17 +77,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   patient_name VARCHAR(255) NOT NULL,
   patient_age INT,
   patient_condition TEXT,
-  need_oxygen BOOLEAN DEFAULT FALSE,
-  wheelchair_required BOOLEAN DEFAULT FALSE,
-  special_instructions TEXT,
-  distance DECIMAL(10, 2),
-  estimated_cost DECIMAL(10, 2),
-  actual_cost DECIMAL(10, 2),
-  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'completed', 'cancelled')),
-  rejection_reason VARCHAR(500),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+ );
 
 CREATE INDEX idx_bookings_user_id ON bookings(user_id);
 CREATE INDEX idx_bookings_provider_id ON bookings(provider_id);
@@ -120,48 +110,62 @@ ALTER TABLE ambulances ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_audit_logs ENABLE ROW LEVEL SECURITY;
 
+-- Helper function to get user role securely without triggering RLS recursion
+CREATE OR REPLACE FUNCTION get_user_role()
+RETURNS VARCHAR
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  user_role VARCHAR;
+BEGIN
+  SELECT role INTO user_role FROM public.users WHERE id = auth.uid();
+  RETURN user_role;
+END;
+$$;
+
 -- Users RLS Policies
-CREATE POLICY "Users can view their own data" ON users
+CREATE POLICY "Users can view their own data or admins can view all" ON users
   FOR SELECT USING (
-    auth.uid()::text = id::text OR
-    (SELECT role FROM users WHERE id = auth.uid()::uuid) = 'admin'
+    auth.uid() = id OR
+    get_user_role() = 'admin'
   );
 
 CREATE POLICY "Users can update their own data" ON users
-  FOR UPDATE USING (auth.uid()::text = id::text);
+  FOR UPDATE USING (auth.uid() = id);
 
 -- Providers RLS Policies
-CREATE POLICY "Providers can view their own data" ON providers
+CREATE POLICY "Providers can view their own data or admins can view all" ON providers
   FOR SELECT USING (
-    user_id = auth.uid()::uuid OR
-    (SELECT role FROM users WHERE id = auth.uid()::uuid) = 'admin'
+    user_id = auth.uid() OR
+    get_user_role() = 'admin'
   );
 
 -- Bookings RLS Policies
-CREATE POLICY "Users can view their own bookings" ON bookings
+CREATE POLICY "Users, assigned providers, and admins can view bookings" ON bookings
   FOR SELECT USING (
-    user_id = auth.uid()::uuid OR
-    provider_id = (SELECT id FROM providers WHERE user_id = auth.uid()::uuid) OR
-    (SELECT role FROM users WHERE id = auth.uid()::uuid) = 'admin'
+    user_id = auth.uid() OR
+    provider_id = (SELECT id FROM providers WHERE user_id = auth.uid()) OR
+    get_user_role() = 'admin'
   );
 
 CREATE POLICY "Users can create bookings" ON bookings
   FOR INSERT WITH CHECK (
-    user_id = auth.uid()::uuid
+    user_id = auth.uid()
   );
 
 CREATE POLICY "Admins can update bookings" ON bookings
   FOR UPDATE USING (
-    (SELECT role FROM users WHERE id = auth.uid()::uuid) = 'admin'
+    get_user_role() = 'admin'
   );
 
 -- Audit Logs RLS Policies
 CREATE POLICY "Only admins can view audit logs" ON admin_audit_logs
   FOR SELECT USING (
-    (SELECT role FROM users WHERE id = auth.uid()::uuid) = 'admin'
+    get_user_role() = 'admin'
   );
 
 CREATE POLICY "Only admins can insert audit logs" ON admin_audit_logs
   FOR INSERT WITH CHECK (
-    (SELECT role FROM users WHERE id = auth.uid()::uuid) = 'admin'
+    get_user_role() = 'admin'
   );

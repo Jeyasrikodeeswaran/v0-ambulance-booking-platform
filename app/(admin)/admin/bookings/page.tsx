@@ -6,9 +6,10 @@ import { RequestFilters } from '@/components/admin/request-filters';
 import { RequestTable } from '@/components/admin/request-table';
 import { RequestDetailsModal } from '@/components/admin/request-details-modal';
 import { StatsCard } from '@/components/admin/stats-card';
-import { AlertCircle, CheckCircle, Clock, XCircle, TrendingUp } from 'lucide-react';
+import { Calendar, CheckCircle, Car, TrendingUp } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface RequestsPageState {
+interface BookingsPageState {
   requests: BookingRequest[];
   total: number;
   page: number;
@@ -25,8 +26,8 @@ interface RequestsPageState {
   };
 }
 
-export default function AdminRequestsPage() {
-  const [state, setState] = useState<RequestsPageState>({
+export default function AdminBookingsPage() {
+  const [state, setState] = useState<BookingsPageState>({
     requests: [],
     total: 0,
     page: 1,
@@ -53,7 +54,6 @@ export default function AdminRequestsPage() {
           const providersRes = await fetch('/api/admin/requests/providers');
           const providersData = providersRes.ok ? await providersRes.json() : [];
           providers = Array.isArray(providersData) ? providersData : [];
-          console.log('[v0] Providers data:', providers);
         } catch (err) {
           console.error('[v0] Error fetching providers:', err);
           providers = [];
@@ -68,29 +68,13 @@ export default function AdminRequestsPage() {
           console.error('[v0] Error fetching stats:', err);
         }
 
-        // Fetch initial requests
-        let requestsData = { requests: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
-        try {
-          const requestsRes = await fetch('/api/admin/requests?page=1&pageSize=10');
-          requestsData = requestsRes.ok ? await requestsRes.json() : requestsData;
-        } catch (err) {
-          console.error('[v0] Error fetching requests:', err);
-        }
-
         setState((prev) => ({
           ...prev,
           providers: Array.isArray(providers) ? providers : [],
           stats,
-          requests: Array.isArray(requestsData.requests) ? requestsData.requests : [],
-          total: requestsData.total || 0,
-          page: requestsData.page || 1,
-          pageSize: requestsData.pageSize || 10,
-          totalPages: requestsData.totalPages || 0,
-          isLoading: false,
         }));
       } catch (error) {
         console.error('[v0] Error loading initial data:', error);
-        setState((prev) => ({ ...prev, isLoading: false }));
       }
     };
 
@@ -137,7 +121,7 @@ export default function AdminRequestsPage() {
     }));
   };
 
-  const handleSelectRequest = async (request: BookingRequest) => {
+  const handleSelectRequest = (request: BookingRequest) => {
     setSelectedRequest(request);
   };
 
@@ -151,7 +135,7 @@ export default function AdminRequestsPage() {
       });
 
       if (res.ok) {
-        // Refresh data
+        toast.success('Request accepted successfully');
         setState((prev) => ({
           ...prev,
           requests: prev.requests.map((r) =>
@@ -159,9 +143,12 @@ export default function AdminRequestsPage() {
           ),
         }));
         setSelectedRequest(null);
+      } else {
+        toast.error('Failed to accept request');
       }
     } catch (error) {
       console.error('[v0] Error accepting request:', error);
+      toast.error('An error occurred');
     } finally {
       setIsProcessing(false);
     }
@@ -177,7 +164,7 @@ export default function AdminRequestsPage() {
       });
 
       if (res.ok) {
-        // Refresh data
+        toast.success('Request rejected successfully');
         setState((prev) => ({
           ...prev,
           requests: prev.requests.map((r) =>
@@ -185,9 +172,12 @@ export default function AdminRequestsPage() {
           ),
         }));
         setSelectedRequest(null);
+      } else {
+        toast.error('Failed to reject request');
       }
     } catch (error) {
       console.error('[v0] Error rejecting request:', error);
+      toast.error('An error occurred');
     } finally {
       setIsProcessing(false);
     }
@@ -203,7 +193,7 @@ export default function AdminRequestsPage() {
       });
 
       if (res.ok) {
-        // Refresh data
+        toast.success('Request cancelled successfully');
         setState((prev) => ({
           ...prev,
           requests: prev.requests.map((r) =>
@@ -211,9 +201,12 @@ export default function AdminRequestsPage() {
           ),
         }));
         setSelectedRequest(null);
+      } else {
+        toast.error('Failed to cancel request');
       }
     } catch (error) {
       console.error('[v0] Error canceling request:', error);
+      toast.error('An error occurred');
     } finally {
       setIsProcessing(false);
     }
@@ -223,35 +216,29 @@ export default function AdminRequestsPage() {
     <div className="space-y-8 p-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Ambulance Requests</h1>
-        <p className="mt-2 text-muted-foreground">Manage and process incoming ambulance booking requests</p>
+        <h1 className="text-3xl font-bold text-foreground">All Bookings</h1>
+        <p className="mt-2 text-muted-foreground">Comprehensive history of all ambulance trips and requests.</p>
       </div>
 
       {/* Statistics */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          label="Total Requests"
+          label="Total Bookings"
           value={state.stats.total}
-          icon={<TrendingUp className="h-6 w-6" />}
+          icon={<Calendar className="h-6 w-6" />}
           color="default"
         />
         <StatsCard
-          label="Pending"
-          value={state.stats.pending}
-          icon={<Clock className="h-6 w-6" />}
-          color="warning"
-        />
-        <StatsCard
-          label="Accepted"
+          label="Completed"
           value={state.stats.accepted}
           icon={<CheckCircle className="h-6 w-6" />}
           color="success"
         />
         <StatsCard
-          label="Rejected"
-          value={state.stats.rejected}
-          icon={<XCircle className="h-6 w-6" />}
-          color="danger"
+          label="Active Trips"
+          value={state.stats.pending}
+          icon={<Car className="h-6 w-6" />}
+          color="warning"
         />
       </div>
 

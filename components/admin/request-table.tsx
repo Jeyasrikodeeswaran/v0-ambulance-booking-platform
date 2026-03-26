@@ -89,7 +89,7 @@ export function RequestTable({ requests, onSelectRequest, isLoading }: RequestTa
                   </code>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-foreground font-medium">{request.user?.name || 'N/A'}</div>
+                  <div className="text-foreground font-medium">{request.patient_name || request.user?.name || 'N/A'}</div>
                   <div className="text-xs text-muted-foreground">{request.user?.phone || 'N/A'}</div>
                 </td>
                 <td className="px-6 py-4">

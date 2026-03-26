@@ -11,9 +11,9 @@ interface RequestDetailsModalProps {
   auditLogs?: any[];
   isLoading?: boolean;
   onClose: () => void;
-  onAccept: (id: string, notes?: string) => void;
-  onReject: (id: string, reason?: string) => void;
-  onCancel: (id: string) => void;
+  onAccept?: (id: string, notes?: string) => void;
+  onReject?: (id: string, reason?: string) => void;
+  onCancel?: (id: string) => void;
   isProcessing?: boolean;
 }
 
@@ -45,13 +45,13 @@ export function RequestDetailsModal({
 
     switch (selectedAction) {
       case 'accept':
-        onAccept(request.id, actionNotes);
+        if (onAccept) onAccept(request.id, actionNotes);
         break;
       case 'reject':
-        onReject(request.id, actionNotes);
+        if (onReject) onReject(request.id, actionNotes);
         break;
       case 'cancel':
-        onCancel(request.id);
+        if (onCancel) onCancel(request.id);
         break;
     }
 
@@ -59,7 +59,7 @@ export function RequestDetailsModal({
     setSelectedAction(null);
   };
 
-  const canPerformActions = request.status === 'pending';
+  const canPerformActions = request.status === 'pending' && !!onAccept && !!onReject && !!onCancel;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -107,8 +107,18 @@ export function RequestDetailsModal({
                 </h3>
                 <div className="space-y-3 text-sm">
                   <div>
-                    <p className="text-xs text-muted-foreground">Name</p>
-                    <p className="font-medium text-foreground">{request.user?.name || 'N/A'}</p>
+                    <p className="text-xs text-muted-foreground">Patient Name</p>
+                    <p className="font-medium text-foreground">{request.patient_name || request.user?.name || 'N/A'}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Age</p>
+                      <p className="font-medium text-foreground">{request.patient_age || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Condition</p>
+                      <p className="font-medium text-foreground truncate">{request.patient_condition || 'N/A'}</p>
+                    </div>
                   </div>
                   <div>
                     <p className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -182,16 +192,18 @@ export function RequestDetailsModal({
               </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <p className="text-xs text-muted-foreground">Vehicle Name</p>
-                  <p className="font-medium text-foreground">{request.ambulance?.name || 'N/A'}</p>
+                  <p className="text-xs text-muted-foreground">Vehicle Number</p>
+                  <p className="font-medium text-foreground">{request.ambulance?.vehicle_number || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">License Plate</p>
-                  <p className="font-medium text-foreground">{request.ambulance?.license_plate || 'N/A'}</p>
+                  <p className="text-xs text-muted-foreground">Vehicle Type</p>
+                  <p className="font-medium text-foreground">{request.ambulance?.type || 'N/A'}</p>
                 </div>
                 <div className="md:col-span-2">
-                  <p className="text-xs text-muted-foreground">Vehicle Type</p>
-                  <p className="font-medium text-foreground">{request.ambulance?.vehicle_type || 'N/A'}</p>
+                  <p className="text-xs text-muted-foreground">Driver Info</p>
+                  <p className="font-medium text-foreground">
+                    {request.ambulance?.driver_name ? `${request.ambulance.driver_name} (${request.ambulance.driver_phone})` : 'N/A'}
+                  </p>
                 </div>
               </div>
             </div>

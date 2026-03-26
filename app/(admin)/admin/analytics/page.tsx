@@ -37,6 +37,7 @@ export default function AnalyticsPage() {
       try {
         setIsLoading(true);
         const statsRes = await fetch('/api/admin/stats');
+        if (!statsRes.ok) throw new Error('Failed to fetch stats');
         const statsData = await statsRes.json();
 
         // Mock analytics data for demonstration
@@ -64,6 +65,7 @@ export default function AnalyticsPage() {
       const response = await fetch(
         `/api/admin/requests?page=1&pageSize=1000&status=&provider_id=&date_from=${dateRange.from}&date_to=${dateRange.to}`
       );
+      if (!response.ok) throw new Error('Failed to export requests');
       const data = await response.json();
 
       // Convert to CSV
