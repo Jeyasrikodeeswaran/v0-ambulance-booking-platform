@@ -141,6 +141,7 @@ export const sampleAmbulances: Ambulance[] = [
     baseCharge: 500,
     pricePerKm: 15,
     status: 'available',
+    registrationStatus: 'approved',
     createdAt: '2024-03-15T10:00:00Z',
   },
   {
@@ -154,6 +155,7 @@ export const sampleAmbulances: Ambulance[] = [
     baseCharge: 800,
     pricePerKm: 20,
     status: 'available',
+    registrationStatus: 'approved',
     createdAt: '2024-03-15T10:30:00Z',
   },
   {
@@ -167,6 +169,7 @@ export const sampleAmbulances: Ambulance[] = [
     baseCharge: 1500,
     pricePerKm: 30,
     status: 'available',
+    registrationStatus: 'approved',
     createdAt: '2024-03-15T11:00:00Z',
   },
   {
@@ -180,6 +183,7 @@ export const sampleAmbulances: Ambulance[] = [
     baseCharge: 450,
     pricePerKm: 14,
     status: 'available',
+    registrationStatus: 'approved',
     createdAt: '2024-04-20T09:00:00Z',
   },
   {
@@ -193,6 +197,7 @@ export const sampleAmbulances: Ambulance[] = [
     baseCharge: 750,
     pricePerKm: 18,
     status: 'booked',
+    registrationStatus: 'approved',
     createdAt: '2024-04-20T09:30:00Z',
   },
   {
@@ -206,6 +211,7 @@ export const sampleAmbulances: Ambulance[] = [
     baseCharge: 1400,
     pricePerKm: 28,
     status: 'maintenance',
+    registrationStatus: 'approved',
     createdAt: '2024-04-20T10:00:00Z',
   },
 ]

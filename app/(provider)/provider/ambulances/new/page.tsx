@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/context/auth-context'
 import { ambulanceStore } from '@/lib/data/store'
+import { createAmbulanceRecord } from '@/lib/supabase/admin'
 import type { AmbulanceType, AmbulanceStatus } from '@/lib/data/types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -17,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Ambulance, Loader2 } from 'lucide-react'
+import { ArrowLeft, Ambulance, Loader2, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface FormData {
@@ -111,7 +112,28 @@ export default function AddAmbulancePage() {
         baseCharge: parseFloat(formData.baseCharge),
         pricePerKm: parseFloat(formData.pricePerKm),
         status: formData.status,
+        registrationStatus: 'pending',
       })
+
+      // NEW: Save to Supabase for Admin registration flow
+      try {
+        await createAmbulanceRecord({
+          provider_id: provider.id,
+          vehicle_number: formData.vehicleNumber.toUpperCase(),
+          type: formData.type,
+          driver_name: formData.driverName,
+          driver_phone: formData.driverPhone,
+          base_location: formData.baseLocation,
+          base_charge: parseFloat(formData.baseCharge),
+          price_per_km: parseFloat(formData.pricePerKm),
+          status: 'available', // initial status
+        });
+        console.log('[v0] Ambulance record created in Supabase');
+      } catch (supabaseError) {
+        console.error('[v0] Failed to sync with Supabase:', supabaseError);
+        // We don't block the UI if Supabase fails in this demo, 
+        // but we log it for the user to see.
+      }
 
       toast.success('Ambulance added successfully!')
       router.push('/provider/ambulances')
@@ -139,7 +161,7 @@ export default function AddAmbulancePage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">Add New Ambulance</h1>
-          <p className="text-muted-foreground">Register a new ambulance to your fleet</p>
+          <p className="text-muted-foreground">Register a new ambulance to your fleet. Note: All new ambulances require admin approval.</p>
         </div>
       </div>
 
@@ -278,24 +300,16 @@ export default function AddAmbulancePage() {
               </div>
             </div>
 
-            {/* Status */}
-            <div className="space-y-4">
-              <h3 className="font-medium">Initial Status</h3>
-              <div className="space-y-2">
-                <Label htmlFor="status">Availability Status *</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(v) => updateField('status', v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="available">Available - Ready for bookings</SelectItem>
-                    <SelectItem value="maintenance">Maintenance - Not accepting bookings</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Status Information */}
+            <div className="rounded-lg bg-muted p-4">
+              <div className="flex items-center gap-2 font-medium text-amber-700">
+                <Clock className="h-4 w-4" />
+                <span>Pending Approval</span>
               </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your ambulance will be registered as <span className="font-semibold text-foreground italic">Pending</span>. 
+                Our team will review your details and approve it within 24-48 hours.
+              </p>
             </div>
 
             {/* Actions */}

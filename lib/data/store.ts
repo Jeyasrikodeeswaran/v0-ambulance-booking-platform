@@ -181,6 +181,7 @@ export const ambulanceStore = {
     
     return ambulances.filter(a => {
       if (a.status !== 'available') return false
+      if (a.registrationStatus !== 'approved') return false
       if (!approvedProviderIds.includes(a.providerId)) return false
       if (type && a.type !== type) return false
       if (location && !a.baseLocation.toLowerCase().includes(location.toLowerCase())) return false
@@ -193,6 +194,7 @@ export const ambulanceStore = {
     const newAmbulance: Ambulance = {
       ...ambulance,
       id: `amb-${Date.now()}`,
+      registrationStatus: 'pending',
       createdAt: new Date().toISOString(),
     }
     ambulances.push(newAmbulance)

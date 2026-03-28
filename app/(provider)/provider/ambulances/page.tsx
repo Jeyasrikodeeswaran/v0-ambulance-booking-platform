@@ -144,6 +144,19 @@ export default function ProviderAmbulancesPage() {
     setAmbulanceToDelete(null)
   }
 
+  const getRegistrationStatusColor = (status: Ambulance['registrationStatus']) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-100 text-green-700 border-green-200'
+      case 'pending':
+        return 'bg-amber-100 text-amber-700 border-amber-200'
+      case 'rejected':
+        return 'bg-red-100 text-red-700 border-red-200'
+      default:
+        return ''
+    }
+  }
+
   const getStatusColor = (status: Ambulance['status']) => {
     switch (status) {
       case 'available':
@@ -317,10 +330,15 @@ export default function ProviderAmbulancesPage() {
                     ₹{ambulance.baseCharge} base + ₹{ambulance.pricePerKm}/km
                   </span>
                 </div>
-                <div className="pt-2">
-                  <Badge className={`capitalize ${getStatusColor(ambulance.status)}`}>
-                    {ambulance.status.replace('_', ' ')}
+                <div className="flex gap-2 pt-2">
+                  <Badge className={`capitalize ${getRegistrationStatusColor(ambulance.registrationStatus)}`}>
+                    {ambulance.registrationStatus}
                   </Badge>
+                  {ambulance.registrationStatus === 'approved' && (
+                    <Badge variant="outline" className={`capitalize ${getStatusColor(ambulance.status)}`}>
+                      {ambulance.status.replace('_', ' ')}
+                    </Badge>
+                  )}
                 </div>
               </CardContent>
             </Card>

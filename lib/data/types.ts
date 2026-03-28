@@ -52,6 +52,7 @@ export interface Ambulance {
   baseCharge: number
   pricePerKm: number
   status: AmbulanceStatus
+  registrationStatus: 'pending' | 'approved' | 'rejected'
   createdAt: string
 }
 

@@ -58,7 +58,8 @@ const providerNav: NavItem[] = [
 
 const adminNav: NavItem[] = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { label: 'Ambulance Requests', href: '/admin/requests', icon: Inbox },
+  { label: 'Booking Requests', href: '/admin/requests', icon: Inbox },
+  { label: 'Ambulance Registrations', href: '/admin/requests/ambulances', icon: Ambulance },
   { label: 'Analytics', href: '/admin/analytics', icon: PieChart },
   { label: 'Provider Approvals', href: '/admin/providers', icon: CheckCircle },
   { label: 'All Providers', href: '/admin/providers/list', icon: Building2 },

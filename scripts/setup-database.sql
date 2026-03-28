@@ -52,12 +52,14 @@ CREATE TABLE IF NOT EXISTS ambulances (
   base_charge DECIMAL(10, 2) NOT NULL,
   price_per_km DECIMAL(10, 2) NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'available' CHECK (status IN ('available', 'booked', 'on_trip', 'maintenance')),
+  registration_status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (registration_status IN ('pending', 'approved', 'rejected')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_ambulances_provider_id ON ambulances(provider_id);
 CREATE INDEX idx_ambulances_status ON ambulances(status);
+CREATE INDEX idx_ambulances_registration_status ON ambulances(registration_status);
 
 -- Bookings Table (Ambulance Requests)
 CREATE TABLE IF NOT EXISTS bookings (
